@@ -1,30 +1,71 @@
 extern crate gtk;
-extern crate gio;
-
-use gtk::prelude::*;
-use gio::prelude::*;
-
-use gtk::{Application, ApplicationWindow, Button};
+use gtk::*;
+use std::process;
 
 fn main() {
-    let application = Application::new(
-        Some("com.github.gtk-rs.examples.basic"),
-        Default::default(),
-    ).expect("failed to initialize GTK application");
+    // Initialize GTK before proceeding.
+    if gtk::init().is_err() {
+        eprintln!("failed to initialize GTK Application");
+        process::exit(1);
+    }
 
-    application.connect_activate(|app| {
-        let window = ApplicationWindow::new(app);
-        window.set_title("First GTK+ Program");
-        window.set_default_size(350, 70);
+    // Initialize the UI's initial state
+    let app = App::new();
 
-        let button = Button::with_label("Click me!");
-        button.connect_clicked(|_| {
-            println!("Clicked!");
+    // Make all the widgets within the UI visible.
+    app.window.show_all();
+
+    // Start the GTK main event loop
+    gtk::main();
+}
+
+pub struct App {
+    pub window: Window,
+    pub header: Header,
+}
+
+pub struct Header {
+    pub container: HeaderBar,
+}
+
+impl App {
+    fn new() -> App {
+        // Create a new top level window.
+        let window = Window::new(WindowType::Toplevel);
+        // Create a the headerbar and it's associated content.
+        let header = Header::new();
+
+        // Set the headerbar as the title bar widget.
+        window.set_titlebar(Some(&header.container));
+        // Set the title of the window.
+        window.set_title("App Name");
+        // Set the window manager class.
+        window.set_wmclass("app-name", "App name");
+        // The icon the app will display.
+        Window::set_default_icon_name("iconname");
+
+        // Programs what to do when the exit button is used.
+        window.connect_delete_event(move |_, _| {
+            main_quit();
+            Inhibit(false)
         });
-        window.add(&button);
 
-        window.show_all();
-    });
+        // Return our main application state
+        App { window, header }
+    }
+}
 
-    application.run(&[]);
+impl Header {
+    fn new() -> Header {
+        // Creates the main header bar container widget.
+        let container = HeaderBar::new();
+
+        // Sets the text to display in the title section of the header bar.
+        container.set_title(Some("App Name"));
+        // Enable the window controls within this headerbar.
+        container.set_show_close_button(true);
+
+        // Returns the header and all of it's state
+        Header { container }
+    }
 }
